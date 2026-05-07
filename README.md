@@ -1,5 +1,3 @@
-#CSCI-271---Project
-
 **Martian Outpost: Sol 20**
 
 **Team Members**
