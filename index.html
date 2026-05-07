@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Martian Outpost: Sol 20</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ── 3D CANVAS ── -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- ── START SCREEN ── -->
+  <div id="start-screen" class="overlay">
+    <div class="start-content">
+      <div class="logo-ring"></div>
+      <p class="mission-tag">MISSION BRIEFING</p>
+      <h1 class="title">MARTIAN OUTPOST</h1>
+      <h2 class="subtitle">SOL 20</h2>
+      <p class="description">
+        You are the Commander of humanity's first Martian colony.<br/>
+        Manage <span class="hl-o2">Oxygen</span>, <span class="hl-food">Food</span>,
+        and <span class="hl-pwr">Power</span> for 20 Sols until the rescue ship arrives.<br/>
+        Mars is unforgiving. Prepare accordingly.
+      </p>
+      <div class="start-rules">
+        <div class="rule"><span class="rule-icon">⚗️</span> Allocate 10 Crew Hours each Sol</div>
+        <div class="rule"><span class="rule-icon">⚠️</span> Any resource at 0 = Mission Failed</div>
+        <div class="rule"><span class="rule-icon">🌌</span> Random events every night</div>
+      </div>
+      <button id="btn-start" class="btn-primary pulse">INITIATE MISSION</button>
+    </div>
+  </div>
+
+  <!-- ── GAME SCREEN ── -->
+  <div id="game-screen" class="overlay hidden">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <div class="top-left">
+        <span class="brand">MARTIAN OUTPOST</span>
+      </div>
+      <div class="sol-display">
+        <div class="sol-label">CURRENT SOL</div>
+        <div class="sol-number" id="sol-number">1</div>
+        <div class="sol-progress-track">
+          <div class="sol-progress-fill" id="sol-progress"></div>
+        </div>
+        <div class="sol-sub" id="sol-sub">20 Sols remaining</div>
+      </div>
+      <div class="top-right">
+        <div class="pop-badge">
+          <span>👥</span>
+          <span id="pop-count">10</span>
+          <span class="pop-label">CREW</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="game-layout">
+
+      <!-- LEFT: RESOURCES -->
+      <div class="panel resources-panel">
+        <div class="panel-header">
+          <span class="panel-icon">📊</span>
+          COLONY STATUS
+        </div>
+
+        <div class="resource-block" id="block-o2">
+          <div class="res-header">
+            <span class="res-icon">⚗️</span>
+            <span class="res-name">OXYGEN</span>
+            <span class="res-value" id="val-o2">50</span>
+            <span class="res-unit">%</span>
+          </div>
+          <div class="res-bar-track">
+            <div class="res-bar o2-bar" id="bar-o2" style="width:50%"></div>
+          </div>
+          <div class="res-drain">Daily drain: −25 / Sol</div>
+        </div>
+
+        <div class="resource-block" id="block-food">
+          <div class="res-header">
+            <span class="res-icon">🌱</span>
+            <span class="res-name">FOOD</span>
+            <span class="res-value" id="val-food">50</span>
+            <span class="res-unit">u</span>
+          </div>
+          <div class="res-bar-track">
+            <div class="res-bar food-bar" id="bar-food" style="width:50%"></div>
+          </div>
+          <div class="res-drain">Daily drain: −20 / Sol</div>
+        </div>
+
+        <div class="resource-block" id="block-power">
+          <div class="res-header">
+            <span class="res-icon">⚡</span>
+            <span class="res-name">POWER</span>
+            <span class="res-value" id="val-power">50</span>
+            <span class="res-unit">%</span>
+          </div>
+          <div class="res-bar-track">
+            <div class="res-bar power-bar" id="bar-power" style="width:50%"></div>
+          </div>
+          <div class="res-drain">Daily drain: −30 / Sol</div>
+        </div>
+
+        <div class="efficiency-display">
+          <div class="eff-label">CREW EFFICIENCY</div>
+          <div class="eff-stars" id="eff-stars">⭐⭐⭐</div>
+          <div class="eff-value" id="eff-value">— units/hr</div>
+        </div>
+      </div>
+
+      <!-- CENTER: ALLOCATION -->
+      <div class="panel allocation-panel">
+        <div class="panel-header">
+          <span class="panel-icon">🛸</span>
+          CREW DEPLOYMENT
+        </div>
+
+        <div class="hours-display">
+          <div class="hours-label">CREW HOURS AVAILABLE</div>
+          <div class="hours-value" id="hours-remaining">10</div>
+          <div class="hours-sub">hours / Sol</div>
+        </div>
+
+        <div class="allocation-controls">
+          <div class="alloc-row" id="alloc-o2">
+            <div class="alloc-label">
+              <span>⚗️</span> Oxygen Production
+            </div>
+            <div class="alloc-input-group">
+              <button class="alloc-btn minus" onclick="adjustAlloc('o2', -1)">−</button>
+              <span class="alloc-val" id="alloc-val-o2">0</span>
+              <button class="alloc-btn plus" onclick="adjustAlloc('o2', 1)">+</button>
+            </div>
+            <div class="alloc-bar-mini">
+              <div class="alloc-fill o2-fill" id="alloc-fill-o2"></div>
+            </div>
+          </div>
+
+          <div class="alloc-row" id="alloc-food">
+            <div class="alloc-label">
+              <span>🌱</span> Food Farming
+            </div>
+            <div class="alloc-input-group">
+              <button class="alloc-btn minus" onclick="adjustAlloc('food', -1)">−</button>
+              <span class="alloc-val" id="alloc-val-food">0</span>
+              <button class="alloc-btn plus" onclick="adjustAlloc('food', 1)">+</button>
+            </div>
+            <div class="alloc-bar-mini">
+              <div class="alloc-fill food-fill" id="alloc-fill-food"></div>
+            </div>
+          </div>
+
+          <div class="alloc-row" id="alloc-power">
+            <div class="alloc-label">
+              <span>⚡</span> Power Generation
+            </div>
+            <div class="alloc-input-group">
+              <button class="alloc-btn minus" onclick="adjustAlloc('power', -1)">−</button>
+              <span class="alloc-val" id="alloc-val-power">0</span>
+              <button class="alloc-btn plus" onclick="adjustAlloc('power', 1)">+</button>
+            </div>
+            <div class="alloc-bar-mini">
+              <div class="alloc-fill power-fill" id="alloc-fill-power"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="alloc-warning hidden" id="alloc-warning">
+          ⚠️ Over-allocation penalty will apply!
+        </div>
+
+        <button id="btn-confirm" class="btn-primary" onclick="confirmSol()">
+          CONFIRM DEPLOYMENT →
+        </button>
+      </div>
+
+      <!-- RIGHT: EVENT LOG -->
+      <div class="panel log-panel">
+        <div class="panel-header">
+          <span class="panel-icon">📡</span>
+          MISSION LOG
+        </div>
+        <div class="event-log" id="event-log">
+          <div class="log-entry log-info">
+            <span class="log-sol">[SOL 0]</span>
+            Mission initialized. Good luck, Commander.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── END SCREEN ── -->
+  <div id="end-screen" class="overlay hidden">
+    <div class="end-content">
+      <div class="end-icon" id="end-icon">🚀</div>
+      <h1 class="end-title" id="end-title">MISSION COMPLETE</h1>
+      <p class="end-subtitle" id="end-subtitle">The rescue ship has arrived.</p>
+      <div class="score-card" id="score-card">
+        <div class="score-row">
+          <span>Survival Bonus</span>
+          <span id="score-survival">+1000</span>
+        </div>
+        <div class="score-row">
+          <span>Oxygen Remaining</span>
+          <span id="score-o2">+0</span>
+        </div>
+        <div class="score-row">
+          <span>Food Remaining</span>
+          <span id="score-food">+0</span>
+        </div>
+        <div class="score-row">
+          <span>Power Remaining</span>
+          <span id="score-power">+0</span>
+        </div>
+        <div class="score-total-row">
+          <span>TOTAL SCORE</span>
+          <span id="score-total">1000</span>
+        </div>
+        <div class="rank-display" id="rank-display">
+          <span class="rank-label">COMMANDER RANK</span>
+          <span class="rank-name" id="rank-name">Rookie Commander</span>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="restartGame()">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/scene.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
