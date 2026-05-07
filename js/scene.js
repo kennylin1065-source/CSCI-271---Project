@@ -301,50 +301,237 @@ function spawnBurst(pos, color) {
   BURST_PARTICLES.push({ pts, velocities, positions, life:1.0, geo });
 }
 
-// ── SUIT MATERIALS ─────────────────────────────────────────────────────────────
-const suitMat   = new THREE.MeshStandardMaterial({color:0xe8ddd0,roughness:0.75,metalness:0.05});
-const accentMat = new THREE.MeshStandardMaterial({color:0xcc4400,roughness:0.65,metalness:0.15});
-const helmetMat = new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.25,metalness:0.1});
-const visorMat  = new THREE.MeshPhysicalMaterial({color:0x88ccff,transparent:true,opacity:0.5,roughness:0.05,metalness:0.8});
-const tankMat   = new THREE.MeshStandardMaterial({color:0xdddddd,roughness:0.4,metalness:0.6});
-const stripeMat = new THREE.MeshStandardMaterial({color:0xff5500,roughness:0.6,emissive:0xaa2200,emissiveIntensity:0.3});
-const bootMat   = new THREE.MeshStandardMaterial({color:0x2a1a0a,roughness:0.9,metalness:0.1});
-const gloveMat  = new THREE.MeshStandardMaterial({color:0xccbbaa,roughness:0.8,metalness:0.05});
+// ── CHARACTER MATERIALS ───────────────────────────────────────────────────────
+const mSuit    = new THREE.MeshStandardMaterial({color:0xe8ddd0, roughness:0.72, metalness:0.06});
+const mAccent  = new THREE.MeshStandardMaterial({color:0xcc4400, roughness:0.62, metalness:0.15});
+const mHelmet  = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.22, metalness:0.12});
+const mVisor   = new THREE.MeshPhysicalMaterial({color:0x66aaff, transparent:true, opacity:0.52, roughness:0.04, metalness:0.85});
+const mTank    = new THREE.MeshStandardMaterial({color:0xcccccc, roughness:0.38, metalness:0.65});
+const mStripe  = new THREE.MeshStandardMaterial({color:0xff5500, roughness:0.55, emissive:0xaa2200, emissiveIntensity:0.35});
+const mBoot    = new THREE.MeshStandardMaterial({color:0x221208, roughness:0.92, metalness:0.08});
+const mGlove   = new THREE.MeshStandardMaterial({color:0xbbaa99, roughness:0.82, metalness:0.04});
+const mPatch   = new THREE.MeshStandardMaterial({color:0x003399, roughness:0.7,  emissive:0x001155, emissiveIntensity:0.5});
 
-function buildSuit(root) {
-  const suit=new THREE.Group();
-  const helmGrp=new THREE.Group();
-  helmGrp.add(new THREE.Mesh(new THREE.SphereGeometry(0.155,32,32),helmetMat));
-  const visor=new THREE.Mesh(new THREE.SphereGeometry(0.135,32,24,0,Math.PI*2,0,Math.PI*0.55),visorMat);
-  visor.position.z=0.04; visor.rotation.x=-0.3; helmGrp.add(visor);
-  const neckRing=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.115,0.06,24),helmetMat);
-  neckRing.position.y=-0.12; helmGrp.add(neckRing);
-  [-1,1].forEach(s=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.05,10),tankMat);b.rotation.z=Math.PI/2;b.position.set(s*0.145,0.04,0);helmGrp.add(b);});
-  const ant=new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.22,8),tankMat);ant.position.set(0.09,0.22,0);helmGrp.add(ant);
-  const antTip=new THREE.Mesh(new THREE.SphereGeometry(0.014,8,8),stripeMat);antTip.position.set(0.09,0.33,0);helmGrp.add(antTip);
-  helmGrp.position.set(0,1.65,0); suit.add(helmGrp);
-  const chest=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.28,0.16),suitMat);chest.position.set(0,1.22,0.035);suit.add(chest);
-  const cs=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.26,0.165),stripeMat);cs.position.set(0,1.22,0.036);suit.add(cs);
-  const pack=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.36,0.12),suitMat);pack.position.set(0,1.15,-0.12);suit.add(pack);
-  [-1,1].forEach(s=>{
-    const t=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.32,16),tankMat);t.position.set(s*0.14,1.15,-0.17);suit.add(t);
-    const c=new THREE.Mesh(new THREE.SphereGeometry(0.045,12,8),tankMat);c.position.set(s*0.14,1.31,-0.17);suit.add(c);
-    const sh=new THREE.Mesh(new THREE.SphereGeometry(0.1,16,12,0,Math.PI*2,0,Math.PI*0.6),accentMat);sh.rotation.z=s*Math.PI/2;sh.rotation.x=-0.3;sh.position.set(s*0.22,1.35,0);suit.add(sh);
-    const band=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.04,16),stripeMat);band.position.set(s*0.3,1.12,0);suit.add(band);
-    const arm=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.055,0.22,16),suitMat);arm.position.set(s*0.3,1.02,0);suit.add(arm);
-    const glove=new THREE.Mesh(new THREE.SphereGeometry(0.055,12,10),gloveMat);glove.scale.y=1.4;glove.position.set(s*0.3,0.75,0);suit.add(glove);
-    const gs=new THREE.Mesh(new THREE.CylinderGeometry(0.057,0.057,0.03,14),stripeMat);gs.position.set(s*0.3,0.86,0);suit.add(gs);
-    const thigh=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.065,0.25,14),suitMat);thigh.position.set(s*0.105,0.66,0);suit.add(thigh);
-    const ts=new THREE.Mesh(new THREE.CylinderGeometry(0.077,0.077,0.03,14),stripeMat);ts.position.set(s*0.105,0.77,0);suit.add(ts);
-    const knee=new THREE.Mesh(new THREE.SphereGeometry(0.065,12,10),accentMat);knee.scale.z=0.6;knee.position.set(s*0.105,0.47,0.02);suit.add(knee);
-    const bootLow=new THREE.Mesh(new THREE.CylinderGeometry(0.068,0.072,0.22,14),suitMat);bootLow.position.set(s*0.105,0.28,0);suit.add(bootLow);
-    const foot=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.07,0.2),bootMat);foot.position.set(s*0.105,0.12,0.03);suit.add(foot);
-    const ar=new THREE.Mesh(new THREE.CylinderGeometry(0.072,0.072,0.04,14),accentMat);ar.position.set(s*0.105,0.165,0);suit.add(ar);
+// ── BUILD RIGGED CHARACTER ────────────────────────────────────────────────────
+// Returns joint refs for walk-cycle animation.
+// All dimensions are for a ~1.1-unit-tall astronaut figure.
+function buildCharacter() {
+  const root = new THREE.Group();   // placed at GROUND_Y (feet level)
+
+  function mesh(geo, mat, shadow=true) {
+    const m = new THREE.Mesh(geo, mat);
+    if(shadow){ m.castShadow=true; m.receiveShadow=true; }
+    return m;
+  }
+
+  // ── pivot helper: group placed at jointPos, child mesh offset so geometry
+  //    hangs correctly and rotation pivots at the joint
+  function limb(geo, mat, length, side=1) {
+    const joint = new THREE.Group();
+    const m = mesh(geo, mat);
+    m.position.y = -length/2;  // hang below the pivot
+    joint.add(m);
+    return { joint, mesh: m };
+  }
+
+  // ── LEGS ──────────────────────────────────────────────────────────────────
+  const legJoints = [];
+  [-1, 1].forEach(s => {
+    // Hip joint (pivot)
+    const hipJoint = new THREE.Group();
+    hipJoint.position.set(s * 0.082, 0.56, 0);
+
+    // Thigh
+    const thighMesh = mesh(new THREE.CylinderGeometry(0.068, 0.058, 0.22, 14), mSuit);
+    thighMesh.position.y = -0.11;
+    hipJoint.add(thighMesh);
+
+    // Thigh stripe band
+    const tsBand = mesh(new THREE.CylinderGeometry(0.072, 0.072, 0.025, 14), mStripe);
+    tsBand.position.y = -0.04;
+    hipJoint.add(tsBand);
+
+    // Knee joint (child of hipJoint)
+    const kneeJoint = new THREE.Group();
+    kneeJoint.position.y = -0.22;
+    hipJoint.add(kneeJoint);
+
+    // Knee cap
+    const kneeCap = mesh(new THREE.SphereGeometry(0.062, 12, 10), mAccent);
+    kneeCap.scale.z = 0.58;
+    kneeCap.position.set(0, 0, 0.012);
+    kneeJoint.add(kneeCap);
+
+    // Shin
+    const shinMesh = mesh(new THREE.CylinderGeometry(0.058, 0.052, 0.20, 14), mSuit);
+    shinMesh.position.y = -0.10;
+    kneeJoint.add(shinMesh);
+
+    // Ankle ring
+    const ankleRing = mesh(new THREE.CylinderGeometry(0.056, 0.056, 0.028, 14), mAccent);
+    ankleRing.position.y = -0.21;
+    kneeJoint.add(ankleRing);
+
+    // Boot
+    const bootMesh = mesh(new THREE.BoxGeometry(0.092, 0.065, 0.18), mBoot);
+    bootMesh.position.set(0, -0.245, 0.022);
+    kneeJoint.add(bootMesh);
+
+    root.add(hipJoint);
+    legJoints.push({ hipJoint, kneeJoint, side: s });
   });
-  const belt=new THREE.Mesh(new THREE.CylinderGeometry(0.145,0.145,0.06,20),accentMat);belt.position.set(0,0.9,0);suit.add(belt);
-  suit.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
-  root.add(suit);
-  return {helmGrp};
+
+  // ── HIPS BLOCK ────────────────────────────────────────────────────────────
+  const hipsMesh = mesh(new THREE.CylinderGeometry(0.13, 0.125, 0.085, 18), mSuit);
+  hipsMesh.position.y = 0.60;
+  root.add(hipsMesh);
+
+  // ── TORSO ─────────────────────────────────────────────────────────────────
+  const torso = new THREE.Group();
+  torso.position.y = 0.78;
+  root.add(torso);
+
+  // Body
+  const bodyMesh = mesh(new THREE.CylinderGeometry(0.118, 0.13, 0.26, 16), mSuit);
+  torso.add(bodyMesh);
+
+  // Chest plate (front)
+  const chestPlate = mesh(new THREE.BoxGeometry(0.26, 0.22, 0.13), mSuit);
+  chestPlate.position.set(0, 0.01, 0.03);
+  torso.add(chestPlate);
+
+  // Chest center stripe
+  const chestStripe = mesh(new THREE.BoxGeometry(0.048, 0.20, 0.132), mStripe);
+  chestStripe.position.set(0, 0.01, 0.031);
+  torso.add(chestStripe);
+
+  // Backpack body
+  const packBody = mesh(new THREE.BoxGeometry(0.21, 0.28, 0.10), mSuit);
+  packBody.position.set(0, 0, -0.10);
+  torso.add(packBody);
+
+  // Backpack tanks ×2
+  [-1, 1].forEach(s => {
+    const tank = mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.25, 14), mTank);
+    tank.position.set(s * 0.115, 0.01, -0.135);
+    torso.add(tank);
+    const tankCap = mesh(new THREE.SphereGeometry(0.038, 10, 8), mTank);
+    tankCap.position.set(s * 0.115, 0.135, -0.135);
+    torso.add(tankCap);
+  });
+
+  // Belt
+  const belt = mesh(new THREE.CylinderGeometry(0.132, 0.132, 0.052, 18), mAccent);
+  belt.position.y = -0.155;
+  torso.add(belt);
+
+  // Buckle
+  const buckle = mesh(new THREE.BoxGeometry(0.058, 0.045, 0.135), mTank);
+  buckle.position.set(0, -0.155, 0.055);
+  torso.add(buckle);
+
+  // Mission patch (left chest)
+  const patch = mesh(new THREE.CircleGeometry(0.038, 8), mPatch);
+  patch.rotation.y = Math.PI / 2;
+  patch.position.set(-0.145, 0.06, 0);
+  torso.add(patch);
+
+  // ── ARMS ─────────────────────────────────────────────────────────────────
+  const armJoints = [];
+  [-1, 1].forEach(s => {
+    // Shoulder pad (decorative)
+    const shoulderPad = mesh(
+      new THREE.SphereGeometry(0.088, 14, 10, 0, Math.PI*2, 0, Math.PI*0.58), mAccent);
+    shoulderPad.rotation.z = s * Math.PI / 2;
+    shoulderPad.rotation.x = -0.28;
+    shoulderPad.position.set(s * 0.175, 0.115, 0);
+    torso.add(shoulderPad);
+
+    // Shoulder joint (pivot for whole arm)
+    const shoulderJoint = new THREE.Group();
+    shoulderJoint.position.set(s * 0.175, 0.10, 0);
+    torso.add(shoulderJoint);
+
+    // Upper arm
+    const upperArm = mesh(new THREE.CylinderGeometry(0.055, 0.048, 0.185, 14), mSuit);
+    upperArm.position.y = -0.0925;
+    shoulderJoint.add(upperArm);
+
+    // Arm band stripe
+    const armBand = mesh(new THREE.CylinderGeometry(0.058, 0.058, 0.025, 14), mStripe);
+    armBand.position.y = -0.06;
+    shoulderJoint.add(armBand);
+
+    // Elbow joint
+    const elbowJoint = new THREE.Group();
+    elbowJoint.position.y = -0.185;
+    shoulderJoint.add(elbowJoint);
+
+    // Forearm
+    const forearm = mesh(new THREE.CylinderGeometry(0.047, 0.042, 0.155, 14), mSuit);
+    forearm.position.y = -0.0775;
+    elbowJoint.add(forearm);
+
+    // Wrist ring
+    const wristRing = mesh(new THREE.CylinderGeometry(0.049, 0.049, 0.022, 14), mStripe);
+    wristRing.position.y = -0.168;
+    elbowJoint.add(wristRing);
+
+    // Glove / hand
+    const hand = mesh(new THREE.SphereGeometry(0.048, 10, 8), mGlove);
+    hand.scale.y = 1.3;
+    hand.position.y = -0.195;
+    elbowJoint.add(hand);
+
+    armJoints.push({ shoulderJoint, elbowJoint, side: s });
+  });
+
+  // ── NECK ──────────────────────────────────────────────────────────────────
+  const neck = mesh(new THREE.CylinderGeometry(0.048, 0.055, 0.055, 12), mSuit);
+  neck.position.y = 0.148;
+  torso.add(neck);
+
+  // ── HEAD + HELMET ─────────────────────────────────────────────────────────
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 1.065, 0);   // y from root (feet)
+  root.add(headGroup);
+
+  // Helmet dome
+  const helmDome = mesh(new THREE.SphereGeometry(0.125, 28, 22), mHelmet);
+  headGroup.add(helmDome);
+
+  // Visor
+  const visor = mesh(
+    new THREE.SphereGeometry(0.108, 26, 18, 0, Math.PI*2, 0, Math.PI*0.52), mVisor);
+  visor.position.z = 0.028;
+  visor.rotation.x = -0.32;
+  headGroup.add(visor);
+
+  // Neck ring (collar)
+  const neckRing = mesh(new THREE.CylinderGeometry(0.082, 0.094, 0.048, 20), mHelmet);
+  neckRing.position.y = -0.096;
+  headGroup.add(neckRing);
+
+  // Side camera bumps
+  [-1, 1].forEach(s => {
+    const bump = mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.04, 10), mTank);
+    bump.rotation.z = Math.PI / 2;
+    bump.position.set(s * 0.118, 0.03, 0);
+    headGroup.add(bump);
+  });
+
+  // Antenna
+  const ant = mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.175, 8), mTank);
+  ant.position.set(0.07, 0.17, 0);
+  headGroup.add(ant);
+  const antTip = mesh(new THREE.SphereGeometry(0.011, 8, 8), mStripe);
+  antTip.position.set(0.07, 0.262, 0);
+  headGroup.add(antTip);
+
+  // Cast shadows on everything
+  root.traverse(c => { if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; } });
+
+  return { root, legJoints, armJoints, headGroup };
 }
 
 // ── PLAYER ────────────────────────────────────────────────────────────────────
@@ -352,23 +539,11 @@ const player = new THREE.Group();
 player.position.set(0, GROUND_Y, 0);
 scene.add(player);
 
-let suitRef=null, mixer=null, idleAction=null, walkAction=null, isWalking=false;
+const charData = buildCharacter();
+player.add(charData.root);
 
-new FBXLoader().load('assets/player.fbx', fbx=>{
-  fbx.scale.setScalar(0.022); fbx.position.y=0;
-  fbx.traverse(c=>{if(c.isMesh){c.material=suitMat.clone();c.castShadow=true;c.receiveShadow=true;}});
-  player.add(fbx);
-  suitRef=buildSuit(fbx);
-  if(fbx.animations.length>0){
-    mixer=new THREE.AnimationMixer(fbx);
-    idleAction=mixer.clipAction(fbx.animations[0]); idleAction.play();
-    if(fbx.animations.length>1){walkAction=mixer.clipAction(fbx.animations[1]);}
-  }
-}, undefined, ()=>{
-  const cap=new THREE.Mesh(new THREE.CapsuleGeometry(0.22,0.9,8,16),suitMat);
-  cap.position.y=0.88; cap.castShadow=true; player.add(cap);
-  suitRef=buildSuit(player);
-});
+let walkTime = 0;
+let isWalking = false;
 
 // ── ROVER ─────────────────────────────────────────────────────────────────────
 new FBXLoader().load('assets/rover/mars_rover.fbx', fbx=>{
@@ -473,7 +648,7 @@ function animate() {
 
   if(!gameStarted){ renderer.render(scene,camera); return; }
 
-  if(mixer) mixer.update(delta);
+  // (no FBX mixer — character is procedural)
 
   // ── MOVEMENT ──────────────────────────────────────────────────────────────
   const mgmtOpen=isMgmtOpen();
@@ -498,18 +673,33 @@ function animate() {
     }
     player.position.y=GROUND_Y;
 
-    // Walk/idle blend
-    if(moving!==isWalking){
-      isWalking=moving;
-      if(mixer){
-        if(moving&&walkAction){idleAction?.fadeOut(0.2);walkAction.reset().fadeIn(0.2).play();}
-        else if(!moving&&idleAction){walkAction?.fadeOut(0.2);idleAction.reset().fadeIn(0.2).play();}
-      }
-    }
-    // Helmet bob
-    if(suitRef&&moving){
-      suitRef.helmGrp.position.y=1.65+Math.sin(elapsed*(keys.shift?13:9))*0.007;
-    }
+    // ── WALK CYCLE ANIMATION ────────────────────────────────────────────────
+    isWalking = moving;
+    const freq   = keys.shift ? 12 : 8;    // stride frequency
+    const legAmp = moving ? (keys.shift ? 0.55 : 0.38) : 0;   // leg swing amount
+    const armAmp = moving ? (keys.shift ? 0.32 : 0.22) : 0;   // arm swing amount
+
+    if(moving) walkTime += delta * freq;
+    // smoothly return to rest when stopped
+    const legSwing = Math.sin(walkTime) * legAmp;
+    const armSwing = Math.sin(walkTime) * armAmp;
+
+    charData.legJoints.forEach(({ hipJoint, kneeJoint, side }) => {
+      // alternate legs (side −1 = left leads when sin>0)
+      hipJoint.rotation.x   = legSwing * side;
+      // knee bends on the back-swing (never hyper-extend forward)
+      kneeJoint.rotation.x  = Math.max(0, -legSwing * side) * 0.7;
+    });
+
+    charData.armJoints.forEach(({ shoulderJoint, elbowJoint, side }) => {
+      // arms swing opposite to legs on same side
+      shoulderJoint.rotation.x = -armSwing * side;
+      // slight elbow bend while walking
+      elbowJoint.rotation.x    = moving ? 0.18 : 0;
+    });
+
+    // Head bob
+    charData.headGroup.position.y = 1.065 + Math.sin(walkTime * 2) * (moving ? 0.006 : 0);
   }
 
   // ── OVER-THE-SHOULDER CAMERA ──────────────────────────────────────────────
