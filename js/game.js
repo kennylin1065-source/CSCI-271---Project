@@ -6,90 +6,127 @@ const G = {
   power:  50,
   alloc:  { o2: 0, food: 0, power: 0 },
   running: false,
+  mgmtOpen: false,
   lastEfficiency: 3,
 };
 
-// ── ALLOCATION CONTROLS ──────────────────────────────────────────────────────
+// ── MANAGEMENT MODAL ─────────────────────────────────────────────────────────
+function openMgmt() {
+  if (!G.running) return;
+  G.mgmtOpen = true;
+  document.getElementById('mgmt-modal').classList.remove('hidden');
+  document.getElementById('mgmt-sol').textContent = G.sol;
+  document.getElementById('lock-prompt').classList.remove('hidden');
+  // Release pointer lock
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+
+function closeMgmt() {
+  G.mgmtOpen = false;
+  document.getElementById('mgmt-modal').classList.add('hidden');
+}
+window.closeMgmt = closeMgmt;
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (!G.running) return;
+    G.mgmtOpen ? closeMgmt() : openMgmt();
+  }
+  if (e.key === 'Escape' && G.mgmtOpen) {
+    closeMgmt();
+  }
+});
+
+// ── ALLOCATION ───────────────────────────────────────────────────────────────
 function adjustAlloc(res, delta) {
   const total = G.alloc.o2 + G.alloc.food + G.alloc.power;
-  if (delta > 0 && total >= 15) return; // hard cap at 15
+  if (delta > 0 && total >= 15) return;
   G.alloc[res] = Math.max(0, G.alloc[res] + delta);
   updateAllocUI();
 }
+window.adjustAlloc = adjustAlloc;
 
-function totalAlloc() {
-  return G.alloc.o2 + G.alloc.food + G.alloc.power;
-}
+function totalAlloc() { return G.alloc.o2 + G.alloc.food + G.alloc.power; }
 
 function updateAllocUI() {
   const total = totalAlloc();
   const remaining = 10 - total;
-
-  document.getElementById('alloc-val-o2').textContent    = G.alloc.o2;
-  document.getElementById('alloc-val-food').textContent  = G.alloc.food;
-  document.getElementById('alloc-val-power').textContent = G.alloc.power;
-
-  document.getElementById('alloc-fill-o2').style.width    = Math.min(100, (G.alloc.o2 / 10) * 100)    + '%';
-  document.getElementById('alloc-fill-food').style.width  = Math.min(100, (G.alloc.food / 10) * 100)  + '%';
-  document.getElementById('alloc-fill-power').style.width = Math.min(100, (G.alloc.power / 10) * 100) + '%';
-
-  const hoursEl = document.getElementById('hours-remaining');
-  hoursEl.textContent = remaining;
-  hoursEl.classList.toggle('over', total > 10);
-
-  const warning = document.getElementById('alloc-warning');
-  warning.classList.toggle('hidden', total <= 10);
+  ['o2','food','power'].forEach(r => {
+    document.getElementById(`alloc-val-${r}`).textContent = G.alloc[r];
+    document.getElementById(`alloc-fill-${r}`).style.width = Math.min(100,(G.alloc[r]/10)*100)+'%';
+  });
+  const hEl = document.getElementById('hours-remaining');
+  hEl.textContent = remaining;
+  hEl.classList.toggle('over', total > 10);
+  document.getElementById('alloc-warning').classList.toggle('hidden', total <= 10);
 }
 
-// ── RESOURCE UI ──────────────────────────────────────────────────────────────
-function updateResourceUI() {
-  const clamp100 = v => Math.min(100, Math.max(0, v));
+// ── HUD UPDATE ───────────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-sol').textContent     = G.sol;
+  document.getElementById('hud-sol-sub').textContent = `/ 20`;
+  document.getElementById('hud-val-o2').textContent    = G.oxygen;
+  document.getElementById('hud-val-food').textContent  = G.food;
+  document.getElementById('hud-val-power').textContent = G.power;
+  document.getElementById('hud-o2').style.width    = Math.min(100,Math.max(0,G.oxygen))+'%';
+  document.getElementById('hud-food').style.width  = Math.min(100,Math.max(0,G.food))+'%';
+  document.getElementById('hud-power').style.width = Math.min(100,Math.max(0,G.power))+'%';
 
+  // Critical pulse class
+  ['o2','food','power'].forEach(r => {
+    const val = r==='o2'?G.oxygen:r==='food'?G.food:G.power;
+    document.getElementById(`hud-${r}`).closest('.hud-bar-row')?.classList.toggle('critical', val<=15);
+  });
+}
+
+function updateMgmtResources() {
   document.getElementById('val-o2').textContent    = G.oxygen;
   document.getElementById('val-food').textContent  = G.food;
   document.getElementById('val-power').textContent = G.power;
-
-  document.getElementById('bar-o2').style.width    = clamp100(G.oxygen) + '%';
-  document.getElementById('bar-food').style.width  = clamp100(G.food)   + '%';
-  document.getElementById('bar-power').style.width = clamp100(G.power)  + '%';
-
-  // Critical state (≤15)
+  document.getElementById('bar-o2').style.width    = Math.min(100,Math.max(0,G.oxygen))+'%';
+  document.getElementById('bar-food').style.width  = Math.min(100,Math.max(0,G.food))+'%';
+  document.getElementById('bar-power').style.width = Math.min(100,Math.max(0,G.power))+'%';
   document.getElementById('block-o2').classList.toggle('critical',    G.oxygen <= 15);
   document.getElementById('block-food').classList.toggle('critical',  G.food   <= 15);
   document.getElementById('block-power').classList.toggle('critical', G.power  <= 15);
-
-  // Sol progress
-  const pct = ((G.sol - 1) / 20) * 100;
-  document.getElementById('sol-progress').style.width = pct + '%';
-  document.getElementById('sol-number').textContent   = G.sol;
-  document.getElementById('sol-sub').textContent      = `${21 - G.sol} Sol${21 - G.sol !== 1 ? 's' : ''} remaining`;
 }
 
-// ── RANDOM EVENTS ────────────────────────────────────────────────────────────
+// ── EVENTS ───────────────────────────────────────────────────────────────────
 function randomEvent() {
   const roll = Math.floor(Math.random() * 8);
   const events = [
-    { msg: '⚡ DUST STORM! Solar panels are damaged.',          o2: 0,   food: 0,   power: -20, type: 'log-danger' },
-    { msg: '🌬️ OXYGEN LEAK detected in Habitat B!',            o2: -20, food: 0,   power: 0,   type: 'log-danger' },
-    { msg: '🐛 CROP BLIGHT! A fungus hit the food supply.',    o2: 0,   food: -20, power: 0,   type: 'log-danger' },
-    { msg: '🔥 ELECTRICAL FIRE! Power and Oxygen taking damage.',o2:-10, food: 0,  power: -15, type: 'log-danger' },
-    { msg: '☀️ CLEAR SKIES! Solar panels at peak efficiency.',  o2: 0,   food: 0,   power: +10, type: 'log-success'},
-    { msg: '🌱 BUMPER HARVEST! Greenhouse overproduced.',       o2: 0,   food: +10, power: 0,   type: 'log-success'},
-    { msg: '🔧 REPAIR CREW SUCCESS! Oxygen systems optimized.', o2: +10, food: 0,   power: 0,   type: 'log-success'},
-    { msg: '😴 ROUTINE DAY. No events to report, Commander.',   o2: 0,   food: 0,   power: 0,   type: 'log-info'  },
+    { msg:'⚡ DUST STORM! Solar panels damaged.',          o2:0,   food:0,   power:-20, type:'log-danger'  },
+    { msg:'🌬️ OXYGEN LEAK in Habitat B!',                 o2:-20, food:0,   power:0,   type:'log-danger'  },
+    { msg:'🐛 CROP BLIGHT! Fungus hit food supply.',      o2:0,   food:-20, power:0,   type:'log-danger'  },
+    { msg:'🔥 ELECTRICAL FIRE! Power & O2 damaged.',      o2:-10, food:0,   power:-15, type:'log-danger'  },
+    { msg:'☀️ CLEAR SKIES! Solar at peak efficiency.',    o2:0,   food:0,   power:+10, type:'log-success' },
+    { msg:'🌱 BUMPER HARVEST! Greenhouse overproduced.',  o2:0,   food:+10, power:0,   type:'log-success' },
+    { msg:'🔧 REPAIR SUCCESS! O2 systems optimized.',     o2:+10, food:0,   power:0,   type:'log-success' },
+    { msg:'😴 ROUTINE NIGHT. No incidents, Commander.',   o2:0,   food:0,   power:0,   type:'log-info'    },
   ];
   const ev = events[roll];
-  G.oxygen += ev.o2;
-  G.food   += ev.food;
-  G.power  += ev.power;
-  clampResources();
+  G.oxygen += ev.o2; G.food += ev.food; G.power += ev.power;
+  clamp();
   logEntry(ev.msg, ev.type);
+  hudFlash(ev.msg, ev.type);
 }
 
-function clampResources() {
-  G.oxygen = Math.min(100, Math.max(0, G.oxygen));
-  G.food   = Math.min(100, Math.max(0, G.food));
-  G.power  = Math.min(100, Math.max(0, G.power));
+function clamp() {
+  G.oxygen = Math.min(100,Math.max(0,G.oxygen));
+  G.food   = Math.min(100,Math.max(0,G.food));
+  G.power  = Math.min(100,Math.max(0,G.power));
+}
+
+// ── HUD EVENT FLASH ───────────────────────────────────────────────────────────
+function hudFlash(msg, type) {
+  const el = document.getElementById('hud-events');
+  const div = document.createElement('div');
+  div.className = `hud-event ${type}`;
+  div.textContent = msg;
+  el.prepend(div);
+  setTimeout(() => div.classList.add('fade-out'), 4000);
+  setTimeout(() => div.remove(), 5000);
 }
 
 // ── LOG ───────────────────────────────────────────────────────────────────────
@@ -102,9 +139,8 @@ function logEntry(msg, cls = 'log-info') {
   log.scrollTop = log.scrollHeight;
 }
 
-// ── EFFICIENCY STARS ──────────────────────────────────────────────────────────
 function showEfficiency(eff) {
-  const stars = eff >= 5 ? '⭐⭐⭐⭐⭐' : eff >= 4 ? '⭐⭐⭐⭐' : eff >= 3 ? '⭐⭐⭐' : eff >= 2 ? '⭐⭐' : '⭐';
+  const stars = eff>=5?'⭐⭐⭐⭐⭐':eff>=4?'⭐⭐⭐⭐':eff>=3?'⭐⭐⭐':eff>=2?'⭐⭐':'⭐';
   document.getElementById('eff-stars').textContent = stars;
   document.getElementById('eff-value').textContent = `${eff} units / hr`;
 }
@@ -112,129 +148,90 @@ function showEfficiency(eff) {
 // ── CONFIRM SOL ───────────────────────────────────────────────────────────────
 function confirmSol() {
   if (!G.running) return;
-
   const total = totalAlloc();
-  const efficiency = Math.floor(Math.random() * 5) + 1; // 1–5
-  G.lastEfficiency = efficiency;
-
-  let effectiveEff = efficiency;
+  const eff = Math.floor(Math.random()*5)+1;
+  G.lastEfficiency = eff;
+  let eEff = eff;
   if (total > 10) {
-    effectiveEff = Math.max(1, efficiency - 2);
-    logEntry(`⚠️ Over-allocation! Crew worked inefficiently. Efficiency penalised to ${effectiveEff}.`, 'log-warning');
+    eEff = Math.max(1, eff-2);
+    logEntry(`⚠️ Over-allocation! Efficiency penalised to ${eEff}.`, 'log-warning');
   }
-
-  // Add resources
-  G.oxygen += G.alloc.o2    * effectiveEff;
-  G.food   += G.alloc.food  * effectiveEff;
-  G.power  += G.alloc.power * effectiveEff;
-  clampResources();
-
-  // Daily drain
-  G.oxygen -= 25;
-  G.food   -= 20;
-  G.power  -= 30;
-  clampResources();
-
-  showEfficiency(efficiency);
-  logEntry(`Crew efficiency: ${efficiency} units/hr. O2 +${G.alloc.o2 * effectiveEff} | Food +${G.alloc.food * effectiveEff} | Power +${G.alloc.power * effectiveEff}`, 'log-info');
-
-  // Random event
+  G.oxygen += G.alloc.o2    * eEff;
+  G.food   += G.alloc.food  * eEff;
+  G.power  += G.alloc.power * eEff;
+  clamp();
+  G.oxygen -= 25; G.food -= 20; G.power -= 30;
+  clamp();
+  showEfficiency(eff);
+  logEntry(`Efficiency: ${eff}/hr. +${G.alloc.o2*eEff} O2 | +${G.alloc.food*eEff} Food | +${G.alloc.power*eEff} Pwr`, 'log-info');
   randomEvent();
 
-  // Check game-over
-  if (G.oxygen <= 0 || G.food <= 0 || G.power <= 0) {
-    const depletedRes = [];
-    if (G.oxygen <= 0) depletedRes.push('Oxygen');
-    if (G.food   <= 0) depletedRes.push('Food');
-    if (G.power  <= 0) depletedRes.push('Power');
-    updateResourceUI();
-    setTimeout(() => endGame(false, depletedRes), 600);
+  if (G.oxygen<=0 || G.food<=0 || G.power<=0) {
+    const dep=[];
+    if(G.oxygen<=0)dep.push('Oxygen');
+    if(G.food<=0)dep.push('Food');
+    if(G.power<=0)dep.push('Power');
+    updateHUD(); updateMgmtResources();
+    closeMgmt();
+    setTimeout(()=>endGame(false,dep), 600);
     return;
   }
-
   G.sol++;
-
-  // Check victory
   if (G.sol > 20) {
-    updateResourceUI();
-    setTimeout(() => endGame(true), 600);
+    updateHUD(); updateMgmtResources();
+    closeMgmt();
+    setTimeout(()=>endGame(true), 600);
     return;
   }
-
-  updateResourceUI();
-
-  // Reset allocation
-  G.alloc = { o2: 0, food: 0, power: 0 };
+  updateHUD(); updateMgmtResources();
+  G.alloc = {o2:0,food:0,power:0};
   updateAllocUI();
+  closeMgmt();
 }
+window.confirmSol = confirmSol;
 
 // ── END GAME ─────────────────────────────────────────────────────────────────
-function endGame(victory, depletedRes = []) {
+function endGame(victory, depletedRes=[]) {
   G.running = false;
-
+  if (document.pointerLockElement) document.exitPointerLock();
   if (victory) {
     document.getElementById('end-icon').textContent    = '🚀';
     document.getElementById('end-title').textContent   = 'MISSION COMPLETE';
     document.getElementById('end-subtitle').textContent= 'The rescue ship has arrived. Well done, Commander.';
-
-    const survivalBonus = 1000;
-    const oBonus  = G.oxygen;
-    const fBonus  = G.food;
-    const pBonus  = G.power;
-    const total   = survivalBonus + oBonus + fBonus + pBonus;
-
-    document.getElementById('score-survival').textContent = `+${survivalBonus}`;
-    document.getElementById('score-o2').textContent       = `+${oBonus}`;
-    document.getElementById('score-food').textContent     = `+${fBonus}`;
-    document.getElementById('score-power').textContent    = `+${pBonus}`;
-    document.getElementById('score-total').textContent    = total;
+    const s = 1000, o=G.oxygen, f=G.food, p=G.power, tot=s+o+f+p;
+    document.getElementById('score-survival').textContent = `+${s}`;
+    document.getElementById('score-o2').textContent       = `+${o}`;
+    document.getElementById('score-food').textContent     = `+${f}`;
+    document.getElementById('score-power').textContent    = `+${p}`;
+    document.getElementById('score-total').textContent    = tot;
     document.getElementById('score-card').style.display   = 'flex';
-
-    let rank;
-    if (total >= 1500) rank = 'Martian Legend';
-    else if (total >= 1350) rank = 'Senior Commander';
-    else if (total >= 1200) rank = 'Field Commander';
-    else if (total >= 1100) rank = 'Junior Commander';
-    else rank = 'Rookie Commander';
-
+    const rank = tot>=1500?'Martian Legend':tot>=1350?'Senior Commander':tot>=1200?'Field Commander':tot>=1100?'Junior Commander':'Rookie Commander';
     document.getElementById('rank-name').textContent = rank;
   } else {
     document.getElementById('end-icon').textContent    = '☠️';
     document.getElementById('end-title').textContent   = 'MISSION FAILED';
-    document.getElementById('end-subtitle').textContent= `CRITICAL FAILURE: ${depletedRes.join(' & ')} depleted. Mars is a harsh mistress.`;
+    document.getElementById('end-subtitle').textContent= `CRITICAL: ${depletedRes.join(' & ')} depleted. Mars is a harsh mistress.`;
     document.getElementById('score-card').style.display= 'none';
   }
-
-  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById('hud').classList.add('hidden');
   document.getElementById('end-screen').classList.remove('hidden');
 }
 
-// ── RESTART ───────────────────────────────────────────────────────────────────
 function restartGame() {
-  G.sol    = 1;
-  G.oxygen = 50;
-  G.food   = 50;
-  G.power  = 50;
-  G.alloc  = { o2: 0, food: 0, power: 0 };
-  G.running = true;
-
+  G.sol=1; G.oxygen=50; G.food=50; G.power=50;
+  G.alloc={o2:0,food:0,power:0}; G.running=true; G.mgmtOpen=false;
   document.getElementById('event-log').innerHTML =
     '<div class="log-entry log-info"><span class="log-sol">[SOL 0]</span>Mission re-initialized. Good luck, Commander.</div>';
-
-  updateResourceUI();
-  updateAllocUI();
-  showEfficiency(3);
-
+  updateHUD(); updateMgmtResources(); updateAllocUI(); showEfficiency(3);
   document.getElementById('end-screen').classList.add('hidden');
-  document.getElementById('game-screen').classList.remove('hidden');
+  document.getElementById('hud').classList.remove('hidden');
 }
+window.restartGame = restartGame;
 
 // ── START ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-start').addEventListener('click', () => {
   G.running = true;
-  updateResourceUI();
-  updateAllocUI();
-  showEfficiency(3);
+  updateHUD(); updateAllocUI(); showEfficiency(3);
   document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('game-screen').classList.remove('hidden');
+  document.getElementById('hud').classList.remove('hidden');
 });
