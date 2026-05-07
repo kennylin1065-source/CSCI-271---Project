@@ -228,6 +228,19 @@ function restartGame() {
 }
 window.restartGame = restartGame;
 
+// ── RESOURCE COLLECTION (called from scene.js) ───────────────────────────────
+window.collectResource = function(type, amount) {
+  if (!G.running) return;
+  if (type === 'oxygen') G.oxygen = Math.min(100, G.oxygen + amount);
+  if (type === 'food')   G.food   = Math.min(100, G.food   + amount);
+  if (type === 'power')  G.power  = Math.min(100, G.power  + amount);
+  updateHUD();
+  updateMgmtResources();
+  const icons = { oxygen:'⚗️', food:'🌱', power:'⚡' };
+  const colors = { oxygen:'log-info', food:'log-success', power:'log-event' };
+  hudFlash(`${icons[type]} Collected +${amount} ${type.toUpperCase()}!`, colors[type]);
+};
+
 // ── START ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-start').addEventListener('click', () => {
   G.running = true;
