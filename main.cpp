@@ -3,6 +3,7 @@
 #include <ctime>
 #include "resources.h"
 #include "events.h"
+#include "scoring.h"
 
 using namespace std;
 int main(){
@@ -50,6 +51,7 @@ int power = 50;
   if(!gameOver){
     cout<<"\nCONGRATULATION PLAYER! YOU HAVE SURVUVED 20 SOLS ON MARS! " <<endl;
   }
+   displayFinalScore(oxygen, food, power, sol- 1, !gameOver);
 return 0;
 }
 
