@@ -41,7 +41,7 @@ int power = 50;
       int number = rand() % 5 + 1; // I updated this befor it was between 3 and 8 if i did not change it the player would be swimming in resources if they get a 8 all the time.
       addResources(oxygen, food, power, H2O, hFood, hPower, number);
       drainResources(oxygen, food, power);
-      randomEvent(oxygen, food, power);  // ← add this line
+      randomEvent(oxygen, food, power); 
 
 
     // this is going to tell the player how the day went
