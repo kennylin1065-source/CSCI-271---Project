@@ -22,7 +22,7 @@ int calculateScore(int oxygen, int food, int power, int solsSurvived, bool won) 
         int solPenalty = (20 - solsSurvived) * 10;
 
         int total = solBonus - depletedPenalty - solPenalty;
-        return max(0, total);  // floor at 0
+        return max(0, total);
     }
 }
 
