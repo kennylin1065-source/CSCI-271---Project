@@ -43,23 +43,23 @@ void displayFinalScore(int oxygen, int food, int power, int solsSurvived, bool w
     cout << "========================================" << endl;
 
     if (won) {
-        cout << "Survival Bonus:      +1000 pts" << endl;
-        cout << "Sol Bonus:           +" << (solsSurvived * 20) << " pts (" << solsSurvived << " sols x 20)" << endl;
+        cout << "Survival Bonus: +1000 pts" << endl;
+        cout << "Sol Bonus: +" << (solsSurvived * 20) << " pts (" << solsSurvived << " sols x 20)" << endl;
         cout << "Resource Efficiency: +" << (oxygen + food + power) << " pts" << endl;
         cout << "  Oxygen: " << oxygen << "  Food: " << food << "  Power: " << power << endl;
     } else {
         int depletedPenalty = 0;
         if (oxygen <= 0) depletedPenalty += 30;
-        if (food <= 0)   depletedPenalty += 30;
-        if (power <= 0)  depletedPenalty += 30;
+        if (food <= 0) depletedPenalty += 30;
+        if (power <= 0) depletedPenalty += 30;
         int solPenalty = (20 - solsSurvived) * 10;
-        cout << "Sol Bonus:           +" << (solsSurvived * 20) << " pts" << endl;
-        cout << "Depleted resources:  -" << depletedPenalty << " pts" << endl;
-        cout << "Sols short of 20:    -" << solPenalty << " pts" << endl;
+        cout << "Sol Bonus: +" << (solsSurvived * 20) << " pts" << endl;
+        cout << "Depleted resources: -" << depletedPenalty << " pts" << endl;
+        cout << "Sols short of 20: -" << solPenalty << " pts" << endl;
     }
 
     cout << "----------------------------------------" << endl;
-    cout << "FINAL SCORE:         " << score << " pts" << endl;
-    cout << "COMMANDER RANK:      " << rank << endl;
+    cout << "FINAL SCORE: " << score << " pts" << endl;
+    cout << "COMMANDER RANK: " << rank << endl;
     cout << "========================================\n" << endl;
 }
